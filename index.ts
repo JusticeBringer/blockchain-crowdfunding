@@ -1,13 +1,13 @@
 /*
 
-Nume proiect: Blocchain crowdfunding
+Nume proiect: Blockchain crowdfunding
 
 Ideea proiectului: 
- - diversi utilizatori Blocchain trimit bani spre o cauza de crowdfunding
+ - diverși utilizatori Blockchain trimit bani spre o cauză de crowdfunding
 
-Beneficii folosind tehnologia Blocchain:
+Beneficii folosind tehnologia Blockchain:
  - anonimitate: donatorii sunt anonimi
- - siguranta: toate tranzactiile facute pentru acea cauza sunt inregistrate si nerambursabile
+ - siguranță: toate tranzacțiile făcute pentru acea cauză sunt înregistrate și nerambursabile
 
 Componența echipei:
  - Arghire Gabriel, 342
@@ -21,12 +21,12 @@ import * as crypto from 'crypto';
 
 /*
 
-Clasa Tranzactie reprezinta transferul de fonduri intre 2 portofele a posibililor donatori
+Clasa Tranzactie reprezintă transferul de fonduri între 2 portofele a posibililor donatori
 
-Constructorul contine campurile
- - sumaDonata: suma donata de un donator
- - donator: cel care doneaza (doar cheia publica)
- - primitorDonatie: cel care primeste donatia (doar cheia publica)
+Constructorul conține câmpurile
+ - sumaDonata: suma donată de un donator
+ - donator: cel care donează (doar cheia publică)
+ - primitorDonatie: cel care primește donația (doar cheia publică)
 
 */
 
@@ -45,23 +45,25 @@ class Tranzactie {
 
 /*
 
-Clasa Bloc reprezinta un bloc din intreg lantul blockchain
+Clasa Bloc este utilă pentru creerea unui nou bloc pentru lanțul blockchain
 
-Constructorul contine
+Constructorul conține
  - hashAnterior: hash-ul blocului anterior
- - Tranzactie: variabila de tipul clasei Tranzactie
+ - Tranzactie: variabilă de tipul clasei Tranzactie
  - dataBlocului: data la care s-a format blocul
 
 */
 
 class Bloc {
   // un nonce este un număr arbitrar care poate fi folosit o singură dată într-o comunicare criptografică
+  // folosim acest nonce pentru a valida proof of work
   public nonce = Math.round(Math.random() * 999999999);
 
   constructor(
+    // o tranzacție are legătură către tranzacția anterioară în forma unui hash
     public hashAnterior: string, 
     public Tranzactie: Tranzactie, 
-    // toate blocurile sunt in ordine cronologica
+    // toate blocurile sunt în ordine cronologică
     public dataBlocului = Date.now()
   ) {}
 
@@ -69,81 +71,121 @@ class Bloc {
   get hash() {
     const str = JSON.stringify(this);
 
-    // utilizarea algoritmului SHA256 presupune ca putem doar cripta hash-ul
+    // utilizarea algoritmului SHA256 presupune că putem doar cripta hash-ul
     // dar nu putem să îl și decriptăm; algoritm „One way”
     const hash = crypto.createHash('SHA256');
+    // facem un hash al blocului ce este ca string
     hash.update(str).end();
 
-    // întoarcem string-ul hașh-uit în bază hexa
+    // întoarcem string-ul hașh-uit în bază hexadecimal
     return hash.digest('hex');
   }
 }
 
+/*
+
+Clasa Chain reprezintă înlănțuirea blocurilor. 
+Avem o instanță de tip Singleton pentru a avea un singur lanț de blocuri
+
+*/
 
 class Chain {
-  // instanță de tip Singleton pentru a avea un singur lanț de blocuri
   public static instance = new Chain();
 
-  // lanțul de blocuri (reprezentat ca vector - simulează o listă înlănțuită)
+  // lanțul de blocuri este reprezentat ca vector - simulează o listă înlănțuită
   chain: Bloc[];
 
   constructor() {
     this.chain = [
-      // adăugăm tranzacția „genesis”
-      new Bloc('', new Tranzactie(0, 'genesis', 'satoshi'))
+      // adăugăm un bloc cu tranzacția „genesis” în lanțul de blocuri
+      new Bloc('', new Tranzactie(0, 'genesis', 'spitalNouBucuresti'))
     ];
   }
 
-  // metodă care întoarce cel mai recent bloc din tranzacție
-  get lastBloc() {
+  // metodă care întoarce cel mai recent bloc din lanțul de blocuri
+  get ultimulBloc() {
     return this.chain[this.chain.length - 1];
   }
 
-  // Proof of work system
-  mine(nonce: number) {
-    let solution = 1;
-    console.log('⛏️  mining...')
-
+  // metodă pentru a avea un sistem proof of work;
+  // pe scurt, încearcă să găsească un număr n care, adăugat la nonce,
+  // va produce un hash care începe cu șirul 1234
+  mineaza(nonce: number) {
+    let solutie = 1;
+    console.log('Proces de minare în desfășurare ... ⛏️')
+ 
+    // cât timp nu am găsit acel număr n, creem hash-uri până când dăm de unul care începe cu șirul 1234
     while(true) {
-
+      // creem un hash cu algoritmul MD5
+      // spre deosebire de SHA-256, MD5 este pe 128 de biți și mai ușor computațional
       const hash = crypto.createHash('MD5');
-      hash.update((nonce + solution).toString()).end();
+      hash.update((nonce + solutie).toString()).end();
 
-      const attempt = hash.digest('hex');
+      const incercare = hash.digest('hex');
 
-      if(attempt.substr(0,4) === '0000'){
-        console.log(`Solved: ${solution}`);
-        return solution;
+      // dacă am găsit acel hash, atunci întoarcem soluția găsită
+      // și o trimitem spre alte noduri care pot să verifice munca efectuată
+      // și blocul poate fi confirmat în lanțul de blocuri
+      // (amintim că această metodă este apelată înaintea metodei de adăuga un bloc - linia ~157)
+      if(incercare.substr(0,4) === '1234'){
+        console.log(`Problemă rezolvată. Soluție găsită: ${solutie}`);
+        return solutie;
       }
 
-      solution += 1;
+      solutie += 1;
     }
   }
 
-  // Add a new Bloc to the chain if valid signature & proof of work is complete
-  addBloc(Tranzactie: Tranzactie, senderPublicKey: string, signature: Buffer) {
-    const verify = crypto.createVerify('SHA256');
-    verify.update(Tranzactie.toString());
+  // metodă pentru a adăuga un bloc în lanțul de blocuri
+  // dacă semnătura este validă și s-a efectuat proof of work (dovadă a muncii)
+  adaugaBloc(Tranzactie: Tranzactie, donatorPublicKey: string, semnatura: Buffer) {
+    // creem o verificare cu același algorirtm SHA256
+    const verificare = crypto.createVerify('SHA256');
+    // verificăm semnătura tranzacției prin trimiterea datelor tranzacției în validator
+    verificare.update(Tranzactie.toString());
 
-    const isValid = verify.verify(senderPublicKey, signature);
+    // aici verificăm dacă s-a produs o modificare a datelor din tranzacție
+    const tranzactieValida = verificare.verify(donatorPublicKey, semnatura);
+    // modificarea datelor din tranzacție nu poate fi făcută decât dacă
+    // se folosește cheia publică a donatorului și semnătura lui
+    // (cineva rău intenționat nu poate schimba suma donată și nici către cine se trimit banii)
 
-    if (isValid) {
-      const newBloc = new Bloc(this.lastBloc.hash, Tranzactie);
-      this.mine(newBloc.nonce);
+    if (tranzactieValida) {
+      // creem un bloc pe care îl vom adăuga la lista de blocuri
+      const newBloc = new Bloc(this.ultimulBloc.hash, Tranzactie);
+      // metodă pentru a preveni efectuarea de donații multiple în același timp
+      this.mineaza(newBloc.nonce);
+      // adăugăm blocul în blockchain
       this.chain.push(newBloc);
     }
   }
 
 }
 
-// Wallet gives a user a public/private keypair
-class Wallet {
+/*
+
+Clasa Portofel oferă utilizatorilor o pereche de cheie publică și privată
+
+Constructorul conține:
+ - keypair: generează o pereche de cheie publică și privată a unui utilizator
+ - publicKey: utilizatorul folosește această cheie pentru PRIMIREA unei donații
+ - privateKey: utilizatorul folosește această cheie pentru EFECTUAREA unei donații
+
+*/
+
+class Portofel {
   public publicKey: string;
   public privateKey: string;
 
   constructor() {
+    // Algoritmul RSA este folosit și pentru criptare și decriptare
+    // Pentru criptare se folosește cheia publică
+    // Pentru decriptare este neapărat nevoie de cheia privată
     const keypair = crypto.generateKeyPairSync('rsa', {
+      // 2048 de biți
       modulusLength: 2048,
+      // folosirea de algoritmi pentru semnare digitală
+      // folosim formatul pem pentru a putea, de exemplu, salva cheia într-un fișier
       publicKeyEncoding: { type: 'spki', format: 'pem' },
       privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
     });
@@ -152,34 +194,74 @@ class Wallet {
     this.publicKey = keypair.publicKey;
   }
 
-  sendMoney(sumaDonata: number, primitorDonatiePublicKey: string) {
+  // metodă pentru efectuarea unei donații
+  efectueazaDonatie(sumaDonata: number, primitorDonatiePublicKey: string) {
+    // începem efectuarea unei donații
     const tranzactie = new Tranzactie(sumaDonata, this.publicKey, primitorDonatiePublicKey);
 
+    // creem o semnătură hash
     const sign = crypto.createSign('SHA256');
+    // pentru datele din tranzacție
     sign.update(tranzactie.toString()).end();
 
-    const signature = sign.sign(this.privateKey); 
-    Chain.instance.addBloc(tranzactie, this.publicKey, signature);
+    // creem o altă semnătură cu cheia privată a celui care donează
+    const semnatura = sign.sign(this.privateKey); 
+    // această semnătură creează o parolă de tip OTP;
+    // mai târziu putem verifica identitatea cheii private (adică cel care a trimis donația)
+    // fără să expunem cheia privată;
+    // semnătura se poate verifica, mai târziu, folosind cheia publică
+
+    // adăugăm acest bloc nou creat în lanțul de blocuri
+    Chain.instance.adaugaBloc(tranzactie, this.publicKey, semnatura);
   }
 }
 
-// Example usage
+/* 
 
-const satoshi = new Wallet();
-const bob = new Wallet();
-const alice = new Wallet();
+Exemplu de folosire:
 
-satoshi.sendMoney(50, bob.publicKey);
-bob.sendMoney(23, alice.publicKey);
-alice.sendMoney(5, bob.publicKey);
+ 1. Alegem o cauză de donare/crowdfunding
+ 2. Generăm 3 donatori
+ 3. Efectuăm 5 donații spre cauza de donare
+ 4. Afișăm blockchain-ul
+ 5. Afișăm tranzacțiile
+ 6. Afișăm detaliile despre cauza de donare
 
-// Afisare detaliata a blockchain-ului
-for (let i: number = 0; i < Chain.instance.chain.length; i++){
-  console.log(Chain.instance.chain[i]);
-}
+*/
 
-// Afisare sumara a blockchain-ului
+// 1. Alegem o cauză de donare/crowdfunding
+const spitalNouBucuresti = new Portofel();
+
+// 2. Generăm 3 donatori
+const AlexDinBucuresti = new Portofel();
+const DanielDinCluj = new Portofel();
+const MihaiDinBrasov = new Portofel();
+
+// 3. Efectuăm 5 donații spre cauza de donare
+AlexDinBucuresti.efectueazaDonatie(500, spitalNouBucuresti.publicKey);
+
+DanielDinCluj.efectueazaDonatie(400, spitalNouBucuresti.publicKey);
+DanielDinCluj.efectueazaDonatie(300, spitalNouBucuresti.publicKey);
+
+MihaiDinBrasov.efectueazaDonatie(100, spitalNouBucuresti.publicKey);
+MihaiDinBrasov.efectueazaDonatie(200, spitalNouBucuresti.publicKey);
+
+// 4. Afișăm blockchain-ul
 console.log(Chain.instance)
 
+// 5. Afișăm tranzacțiile în ordinea în care au fost efectuate
+for (let i: number = 0; i < Chain.instance.chain.length; i++){
+  console.log(Chain.instance.chain[i].Tranzactie);
+}
 
+// 6. Afișăm banii strânși pentru cauza de donare
+let sumaStransa: number = 0
 
+for (let i: number = 0; i < Chain.instance.chain.length; i++){
+  const tranzactieCurenta = Chain.instance.chain[i].Tranzactie
+  if (tranzactieCurenta.primitorDonatie === spitalNouBucuresti.publicKey){
+    sumaStransa += tranzactieCurenta.sumaDonata
+  }
+}
+
+console.log(`\n\nSuma strânsă pentru cauza de donare este: ${sumaStransa} RON`)
