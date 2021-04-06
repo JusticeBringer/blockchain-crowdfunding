@@ -1,54 +1,101 @@
+/*
+
+Nume proiect: Blocchain crowdfunding
+
+Ideea proiectului: 
+ - diversi utilizatori Blocchain trimit bani spre o cauza de crowdfunding
+
+Beneficii folosind tehnologia Blocchain:
+ - anonimitate: donatorii sunt anonimi
+ - siguranta: toate tranzactiile facute pentru acea cauza sunt inregistrate si nerambursabile
+
+Componența echipei:
+ - Arghire Gabriel, 342
+ - Olaru Adrian, 342
+ - Simionov Marius Daniel, 342
+
+*/
+
+
 import * as crypto from 'crypto';
 
-// Transfer of funds between two wallets
-class Transaction {
+/*
+
+Clasa Tranzactie reprezinta transferul de fonduri intre 2 portofele a posibililor donatori
+
+Constructorul contine campurile
+ - sumaDonata: suma donata de un donator
+ - donator: cel care doneaza (doar cheia publica)
+ - primitorDonatie: cel care primeste donatia (doar cheia publica)
+
+*/
+
+class Tranzactie {
   constructor(
-    public amount: number, 
-    public payer: string, // public key
-    public payee: string // public key
+    public sumaDonata: number, 
+    public donator: string,
+    public primitorDonatie: string
   ) {}
 
+  // conversie a unui obiect in string
   toString() {
     return JSON.stringify(this);
   }
 }
 
-// Individual block on the chain
-class Block {
+/*
 
+Clasa Bloc reprezinta un bloc din intreg lantul blockchain
+
+Constructorul contine
+ - hashAnterior: hash-ul blocului anterior
+ - Tranzactie: variabila de tipul clasei Tranzactie
+ - dataBlocului: data la care s-a format blocul
+
+*/
+
+class Bloc {
+  // un nonce este un număr arbitrar care poate fi folosit o singură dată într-o comunicare criptografică
   public nonce = Math.round(Math.random() * 999999999);
 
   constructor(
-    public prevHash: string, 
-    public transaction: Transaction, 
-    public ts = Date.now()
+    public hashAnterior: string, 
+    public Tranzactie: Tranzactie, 
+    // toate blocurile sunt in ordine cronologica
+    public dataBlocului = Date.now()
   ) {}
 
+  // metodă pentru a genera hash-ul blocului următor din lista de blocuri
   get hash() {
     const str = JSON.stringify(this);
+
+    // utilizarea algoritmului SHA256 presupune ca putem doar cripta hash-ul
+    // dar nu putem să îl și decriptăm; algoritm „One way”
     const hash = crypto.createHash('SHA256');
     hash.update(str).end();
+
+    // întoarcem string-ul hașh-uit în bază hexa
     return hash.digest('hex');
   }
 }
 
 
-// The blockchain
 class Chain {
-  // Singleton instance
+  // instanță de tip Singleton pentru a avea un singur lanț de blocuri
   public static instance = new Chain();
 
-  chain: Block[];
+  // lanțul de blocuri (reprezentat ca vector - simulează o listă înlănțuită)
+  chain: Bloc[];
 
   constructor() {
     this.chain = [
-      // Genesis block
-      new Block('', new Transaction(100, 'genesis', 'satoshi'))
+      // adăugăm tranzacția „genesis”
+      new Bloc('', new Tranzactie(0, 'genesis', 'satoshi'))
     ];
   }
 
-  // Most recent block
-  get lastBlock() {
+  // metodă care întoarce cel mai recent bloc din tranzacție
+  get lastBloc() {
     return this.chain[this.chain.length - 1];
   }
 
@@ -73,17 +120,17 @@ class Chain {
     }
   }
 
-  // Add a new block to the chain if valid signature & proof of work is complete
-  addBlock(transaction: Transaction, senderPublicKey: string, signature: Buffer) {
+  // Add a new Bloc to the chain if valid signature & proof of work is complete
+  addBloc(Tranzactie: Tranzactie, senderPublicKey: string, signature: Buffer) {
     const verify = crypto.createVerify('SHA256');
-    verify.update(transaction.toString());
+    verify.update(Tranzactie.toString());
 
     const isValid = verify.verify(senderPublicKey, signature);
 
     if (isValid) {
-      const newBlock = new Block(this.lastBlock.hash, transaction);
-      this.mine(newBlock.nonce);
-      this.chain.push(newBlock);
+      const newBloc = new Bloc(this.lastBloc.hash, Tranzactie);
+      this.mine(newBloc.nonce);
+      this.chain.push(newBloc);
     }
   }
 
@@ -105,14 +152,14 @@ class Wallet {
     this.publicKey = keypair.publicKey;
   }
 
-  sendMoney(amount: number, payeePublicKey: string) {
-    const transaction = new Transaction(amount, this.publicKey, payeePublicKey);
+  sendMoney(sumaDonata: number, primitorDonatiePublicKey: string) {
+    const tranzactie = new Tranzactie(sumaDonata, this.publicKey, primitorDonatiePublicKey);
 
     const sign = crypto.createSign('SHA256');
-    sign.update(transaction.toString()).end();
+    sign.update(tranzactie.toString()).end();
 
     const signature = sign.sign(this.privateKey); 
-    Chain.instance.addBlock(transaction, this.publicKey, signature);
+    Chain.instance.addBloc(tranzactie, this.publicKey, signature);
   }
 }
 
@@ -126,6 +173,13 @@ satoshi.sendMoney(50, bob.publicKey);
 bob.sendMoney(23, alice.publicKey);
 alice.sendMoney(5, bob.publicKey);
 
+// Afisare detaliata a blockchain-ului
+for (let i: number = 0; i < Chain.instance.chain.length; i++){
+  console.log(Chain.instance.chain[i]);
+}
+
+// Afisare sumara a blockchain-ului
 console.log(Chain.instance)
+
 
 
