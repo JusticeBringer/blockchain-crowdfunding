@@ -14,17 +14,11 @@
     "@emotion/styled": "11.1.5",
     "framer-motion": "^3.5.2",
     "next": "latest",
-    "next-auth": "^3.14.6",
-    "next-iron-session": "^4.1.12",
-    "next-session": "^3.4.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "react-icons": "^4.2.0",
-    "write-json-file": "^4.3.0"
+    "react-icons": "^4.2.0"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^8.5.1",
-    "@types/next-auth": "^3.13.0",
     "@types/node": "^14.6.0",
     "@types/react": "^16.9.46",
     "@types/react-dom": "^16.9.8",

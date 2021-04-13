@@ -4,9 +4,15 @@
 //
 // import { User } from 'path/to/interfaces';
 
-export type User = {
-  id: number,
-  username: string,
-  password: string,
-  money: number
+// export type Portofel = {
+//   publicKey: string;
+//   privateKey: string;
+//   money: number;
+// }
+
+export type Cauza = {
+  name: string,
+  publicKey: string,
+  privateKey: string,
+  amount: number
 }
