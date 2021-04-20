@@ -219,6 +219,9 @@ class Portofel {
 
     // adăugăm acest bloc nou creat în lanțul de blocuri
     Chain.instance.adaugaBloc(tranzactie, this.publicKey, semnatura);
+    }else{
+      console.log("Suma datorata este mai mare decat sold-ul din portofel");
+      return;
     }
   }
 
