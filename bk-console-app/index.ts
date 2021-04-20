@@ -199,7 +199,6 @@ class Portofel {
   // metodă pentru efectuarea unei donații
   efectueazaDonatie(sumaDonata: number, primitorDonatiePublicKey: string) {
     // începem efectuarea unei donații
-    this.soldPortofel -= sumaDonata;
     const tranzactie = new Tranzactie(sumaDonata, this.publicKey, primitorDonatiePublicKey);
 
     // creem o semnătură hash
@@ -214,6 +213,9 @@ class Portofel {
     // fără să expunem cheia privată;
     // semnătura se poate verifica, mai târziu, folosind cheia publică
 
+    // scadem suma doanata din portofel
+    this.soldPortofel -= sumaDonata;
+
     // adăugăm acest bloc nou creat în lanțul de blocuri
     Chain.instance.adaugaBloc(tranzactie, this.publicKey, semnatura);
   }
@@ -226,11 +228,6 @@ class Portofel {
   // metodă care retrage din portofelul utilizatorului o anumită sumă
   retragere(sumaRetrasa: number){
     this.soldPortofel -= sumaRetrasa;
-  }
-
-  // metodă care adaugă în portofelul primitorului suma donației
-  primireDonatie(sumaDonata: number){
-    this.soldPortofel += sumaDonata;
   }
 
   // metodă care întoarce suma ramasă în portofel in urma unei donații
@@ -298,10 +295,10 @@ for (let i: number = 0; i < Chain.instance.chain.length; i++){
   const tranzactieCurenta = Chain.instance.chain[i].Tranzactie
   if (tranzactieCurenta.primitorDonatie === spitalNouBucuresti.publicKey){
     sumaStransa += tranzactieCurenta.sumaDonata;
-    spitalNouBucuresti.primireDonatie(tranzactieCurenta.sumaDonata);
   }
 }
 
 console.log(`\n\nSuma strânsă pentru cauza de donare este: ${sumaStransa} RON`);
 // Verificăm suma strânsă în portofelul spitalului și prin funcția soldActual
-console.log(`\nSuma strânsă în portofelul spitalului este: ${spitalNouBucuresti.soldActual} RON`);
+// TODO adauga bani si in sold
+// console.log(`\nSuma strânsă în portofelul spitalului (sold actual) este: ${spitalNouBucuresti.soldActual} RON`);
