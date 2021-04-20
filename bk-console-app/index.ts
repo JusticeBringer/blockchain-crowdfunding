@@ -198,6 +198,7 @@ class Portofel {
 
   // metodă pentru efectuarea unei donații
   efectueazaDonatie(sumaDonata: number, primitorDonatiePublicKey: string) {
+    if(sumaDonata <= this.soldPortofel){
     // începem efectuarea unei donații
     const tranzactie = new Tranzactie(sumaDonata, this.publicKey, primitorDonatiePublicKey);
 
@@ -218,6 +219,7 @@ class Portofel {
 
     // adăugăm acest bloc nou creat în lanțul de blocuri
     Chain.instance.adaugaBloc(tranzactie, this.publicKey, semnatura);
+    }
   }
 
   // metodă care adaugă în portofelul utilizatorului o anumită sumă
