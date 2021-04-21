@@ -271,6 +271,17 @@ Clasa pentru simularea blockchain-ului
 
 class Simulate {
   simulate() {
+    // luare utilizatori in variabile pentru o mai buna citire a codului
+    let spitalNouBucuresti = cauzeDeDonare[0];
+    let AlexDinBucuresti = donatori[0];
+    let DanielDinCluj = donatori[1];
+    let MihaiDinBrasov = donatori[2];
+
+    // umplere conturi cu sume in RON
+    AlexDinBucuresti.depunere(8000);
+    DanielDinCluj.depunere(5000);
+    MihaiDinBrasov.depunere(6000);
+
     for (let i = 0; i < cauzeDeDonare.length; i++) {
       console.log(
         `\n${cauzeDeDonare[i].username} a acumulat suma donata de ${cauzeDeDonare[i].soldActual} BitRON`
@@ -282,11 +293,6 @@ class Simulate {
         `\n${donatori[i].username} are în portofel ${donatori[i].soldActual} BitRON`
       );
     }
-
-    let spitalNouBucuresti = cauzeDeDonare[0];
-    let AlexDinBucuresti = donatori[0];
-    let DanielDinCluj = donatori[1];
-    let MihaiDinBrasov = donatori[2];
 
     // 3. Efectuăm 7 donații spre cauza de donare
     AlexDinBucuresti.efectueazaDonatie(700, spitalNouBucuresti.publicKey);
@@ -365,9 +371,9 @@ cauzeDeDonare.push(new Portofel(0, "spitalNouBucuresti"));
 // aici inregistram donatorii
 let donatori: Portofel[] = [];
 donatori.push(
-  new Portofel(300, "AlexDinBucuresti"),
-  new Portofel(4500, "DanielDinCluj"),
-  new Portofel(3500, "MihaiDinBrasov")
+  new Portofel(10, "AlexDinBucuresti"),
+  new Portofel(10, "DanielDinCluj"),
+  new Portofel(10, "MihaiDinBrasov")
 );
 
 const Sim = new Simulate();
