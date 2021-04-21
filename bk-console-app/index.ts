@@ -255,6 +255,9 @@ class Portofel {
     } else {
       console.log("Suma retrasa este mai mare decat soldul portofelului. 1 RON = 0.1 BitRON");
     }
+    if(this.soldPortofel < 0){
+      this.soldPortofel = 0;
+    }
   }
 
   // metodă care întoarce suma rămasă în portofel în urma unei donații
