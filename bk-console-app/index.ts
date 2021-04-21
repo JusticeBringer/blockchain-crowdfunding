@@ -243,12 +243,18 @@ class Portofel {
 
   // metodă care adaugă în portofelul utilizatorului o anumită sumă
   depunere(sumaDepusa: number) {
-    this.soldPortofel += sumaDepusa;
+    // 1 BitRON  = 10 RON
+    this.soldPortofel += sumaDepusa/10;
   }
 
   // metodă care retrage din portofelul utilizatorului o anumită sumă
   retragere(sumaRetrasa: number) {
-    this.soldPortofel -= sumaRetrasa;
+    // 1 BitRON  = 10 RON
+    if ((this.soldActual * 10) <= sumaRetrasa) {
+      this.soldPortofel -= sumaRetrasa*10;
+    } else {
+      console.log("Suma retrasa este mai mare decat soldul portofelului. 1 RON = 0.1 BitRON");
+    }
   }
 
   // metodă care întoarce suma rămasă în portofel în urma unei donații
@@ -267,13 +273,13 @@ class Simulate {
   simulate() {
     for (let i = 0; i < cauzeDeDonare.length; i++) {
       console.log(
-        `\n${donatori[i].username} a acumulat suma donata de ${donatori[i].soldActual} RON`
+        `\n${cauzeDeDonare[i].username} a acumulat suma donata de ${cauzeDeDonare[i].soldActual} BitRON`
       );
     }
 
     for (let i = 0; i < donatori.length; i++) {
       console.log(
-        `\n${donatori[i].username} are în portofel ${donatori[i].soldActual} RON`
+        `\n${donatori[i].username} are în portofel ${donatori[i].soldActual} BitRON`
       );
     }
 
@@ -285,11 +291,11 @@ class Simulate {
     // 3. Efectuăm 7 donații spre cauza de donare
     AlexDinBucuresti.efectueazaDonatie(700, spitalNouBucuresti.publicKey);
     console.log(
-      `\nÎn urma donațiilor, Alex mai are în portofel ${AlexDinBucuresti.soldActual} RON \n`
+      `\nÎn urma donațiilor, Alex mai are în portofel ${AlexDinBucuresti.soldActual} BitRON \n`
     );
     AlexDinBucuresti.depunere(2000);
     console.log(
-      `\nÎn urma depunerii a 2000 RON, Alex mai are în portofel ${AlexDinBucuresti.soldActual} RON \n`
+      `\nÎn urma depunerii a 2000 RON, Alex mai are în portofel ${AlexDinBucuresti.soldActual} BitRON \n`
     );
 
     DanielDinCluj.efectueazaDonatie(200, spitalNouBucuresti.publicKey);
@@ -297,17 +303,17 @@ class Simulate {
     DanielDinCluj.efectueazaDonatie(600, spitalNouBucuresti.publicKey);
     DanielDinCluj.efectueazaDonatie(1000, spitalNouBucuresti.publicKey);
     console.log(
-      `\nÎn urma donațiilor, Daniel mai are în portofel ${DanielDinCluj.soldActual} RON \n`
+      `\nÎn urma donațiilor, Daniel mai are în portofel ${DanielDinCluj.soldActual} BitRON \n`
     );
 
     MihaiDinBrasov.efectueazaDonatie(500, spitalNouBucuresti.publicKey);
     MihaiDinBrasov.efectueazaDonatie(200, spitalNouBucuresti.publicKey);
     console.log(
-      `\nÎn urma donațiilor, Mihai mai are în portofel ${MihaiDinBrasov.soldActual} RON \n`
+      `\nÎn urma donațiilor, Mihai mai are în portofel ${MihaiDinBrasov.soldActual} BitRON \n`
     );
     MihaiDinBrasov.retragere(1000);
     console.log(
-      `\nÎn urma retragerii a 1000 RON, Mihai mai are în portofel ${MihaiDinBrasov.soldActual} RON \n`
+      `\nÎn urma retragerii a 1000 RON, Mihai mai are în portofel ${MihaiDinBrasov.soldActual} BitRON \n`
     );
 
     // 4. Afișăm blockchain-ul
@@ -329,12 +335,12 @@ class Simulate {
     }
 
     console.log(
-      `\n\nSuma strânsă pentru cauza de donare este, in urma tranzactiilor, : ${sumaStransa} RON`
+      `\n\nSuma strânsă pentru cauza de donare este, in urma tranzactiilor, : ${sumaStransa} BitRON`
     );
 
     // Verificăm suma strânsă în portofelul spitalului și prin funcția soldActual
     console.log(
-      `\nSuma strânsă în portofelul spitalului, in sold actual, este: ${spitalNouBucuresti.soldActual} RON`
+      `\nSuma strânsă în portofelul spitalului, in sold actual, este: ${spitalNouBucuresti.soldActual} BitRON`
     );
   }
 }
