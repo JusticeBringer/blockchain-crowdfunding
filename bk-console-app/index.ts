@@ -250,14 +250,12 @@ class Portofel {
   // metodă care retrage din portofelul utilizatorului o anumită sumă
   retragere(sumaRetrasa: number) {
     // 1 BitRON  = 10 RON
-    if ((this.soldActual * 10) <= sumaRetrasa) {
+    if ((this.sumaRetrasa * 10) <= soldPortofel) {
       this.soldPortofel -= sumaRetrasa*10;
     } else {
       console.log("Suma retrasa este mai mare decat soldul portofelului. 1 RON = 0.1 BitRON");
     }
-    if(this.soldPortofel < 0){
-      this.soldPortofel = 0;
-    }
+
   }
 
   // metodă care întoarce suma rămasă în portofel în urma unei donații
