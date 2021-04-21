@@ -182,7 +182,7 @@ class Portofel {
   public soldPortofel: number;
   public username?: string;
 
-  constructor(soldPortofel: number, username?: string) {
+  constructor(username?: string) {
     // Algoritmul RSA este folosit și pentru criptare și decriptare
     // Pentru criptare se folosește cheia publică
     // Pentru decriptare este neapărat nevoie de cheia privată
@@ -195,7 +195,7 @@ class Portofel {
       privateKeyEncoding: { type: "pkcs8", format: "pem" },
     });
 
-    this.soldPortofel = soldPortofel;
+    this.soldPortofel = 0;
     this.privateKey = keypair.privateKey;
     this.publicKey = keypair.publicKey;
     this.username = username;
@@ -290,11 +290,11 @@ class Simulate {
 
     for (let i = 0; i < donatori.length; i++) {
       console.log(
-        `\n${donatori[i].username} are în portofel ${donatori[i].soldActual} BitRON`
+        `\n${donatori[i]?.username} are în portofel ${donatori[i].soldActual} BitRON`
       );
     }
 
-    // 3. Efectuăm 7 donații spre cauza de donare
+    // 3. Efectuăm donații spre cauza de donare
     AlexDinBucuresti.efectueazaDonatie(700, spitalNouBucuresti.publicKey);
     console.log(
       `\nÎn urma donațiilor, Alex mai are în portofel ${AlexDinBucuresti.soldActual} BitRON \n`
@@ -357,7 +357,7 @@ Exemplu de folosire:
 
  1. Alegem o cauză de donare/crowdfunding
  2. Generăm 3 donatori
- 3. Efectuăm 5 donații spre cauza de donare
+ 3. Efectuăm donații spre cauza de donare
  4. Afișăm blockchain-ul
  5. Afișăm tranzacțiile
  6. Afișăm detaliile despre cauza de donare
@@ -366,14 +366,14 @@ Exemplu de folosire:
 
 // aici inregistram cauzele de donare
 let cauzeDeDonare: Portofel[] = [];
-cauzeDeDonare.push(new Portofel(0, "spitalNouBucuresti"));
+cauzeDeDonare.push(new Portofel("spitalNouBucuresti"));
 
 // aici inregistram donatorii
 let donatori: Portofel[] = [];
 donatori.push(
-  new Portofel(10, "AlexDinBucuresti"),
-  new Portofel(10, "DanielDinCluj"),
-  new Portofel(10, "MihaiDinBrasov")
+  new Portofel("AlexDinBucuresti"),
+  new Portofel("DanielDinCluj"),
+  new Portofel("MihaiDinBrasov")
 );
 
 const Sim = new Simulate();
