@@ -12,6 +12,6 @@
  - Olaru Adrian, 342
  - Simionov Marius Daniel, 342
 
-## Aplicatie consola: `bk-console-app`
+## Aplicație consolă: `bk-console-app`
 
-## Aplicatie GUI: `bk-styled-app`
+## Aplicație GUI: `bk-styled-app`
