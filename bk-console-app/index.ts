@@ -16,8 +16,7 @@ Componența echipei:
 
 */
 
-
-import * as crypto from 'crypto';
+import * as crypto from "crypto";
 
 /*
 
@@ -32,7 +31,7 @@ Constructorul conține câmpurile
 
 class Tranzactie {
   constructor(
-    public sumaDonata: number, 
+    public sumaDonata: number,
     public donator: string,
     public primitorDonatie: string
   ) {}
@@ -61,8 +60,8 @@ class Bloc {
 
   constructor(
     // o tranzacție are legătură către tranzacția anterioară în forma unui hash
-    public hashAnterior: string, 
-    public Tranzactie: Tranzactie, 
+    public hashAnterior: string,
+    public Tranzactie: Tranzactie,
     // toate blocurile sunt în ordine cronologică
     public dataBlocului = Date.now()
   ) {}
@@ -73,12 +72,12 @@ class Bloc {
 
     // utilizarea algoritmului SHA256 presupune că putem doar cripta hash-ul
     // dar nu putem să îl și decriptăm; algoritm „One way”
-    const hash = crypto.createHash('SHA256');
+    const hash = crypto.createHash("SHA256");
     // facem un hash al blocului ce este ca string
     hash.update(str).end();
 
     // întoarcem string-ul hașh-uit în bază hexadecimal
-    return hash.digest('hex');
+    return hash.digest("hex");
   }
 }
 
@@ -98,7 +97,7 @@ class Chain {
   constructor() {
     this.chain = [
       // adăugăm un bloc cu tranzacția „genesis” în lanțul de blocuri
-      new Bloc('', new Tranzactie(0, 'genesis', 'spitalNouBucuresti'))
+      new Bloc("", new Tranzactie(0, "genesis", "spitalNouBucuresti")),
     ];
   }
 
@@ -112,22 +111,22 @@ class Chain {
   // va produce un hash care începe cu șirul 1234
   mineaza(nonce: number) {
     let solutie = 1;
-    console.log('Proces de minare în desfășurare ... ⛏️')
- 
+    console.log("Proces de minare în desfășurare ... ⛏️");
+
     // cât timp nu am găsit acel număr n, creem hash-uri până când dăm de unul care începe cu șirul 1234
-    while(true) {
+    while (true) {
       // creem un hash cu algoritmul MD5
       // spre deosebire de SHA-256, MD5 este pe 128 de biți și mai ușor computațional
-      const hash = crypto.createHash('MD5');
+      const hash = crypto.createHash("MD5");
       hash.update((nonce + solutie).toString()).end();
 
-      const incercare = hash.digest('hex');
+      const incercare = hash.digest("hex");
 
       // dacă am găsit acel hash, atunci întoarcem soluția găsită
       // și o trimitem spre alte noduri care pot să verifice munca efectuată
       // și blocul poate fi confirmat în lanțul de blocuri
       // (amintim că această metodă este apelată înaintea metodei de adăuga un bloc - linia ~157)
-      if(incercare.substr(0,4) === '1234'){
+      if (incercare.substr(0, 4) === "1234") {
         console.log(`Problemă rezolvată. Soluție găsită: ${solutie}`);
         return solutie;
       }
@@ -138,9 +137,13 @@ class Chain {
 
   // metodă pentru a adăuga un bloc în lanțul de blocuri
   // dacă semnătura este validă și s-a efectuat proof of work (dovadă a muncii)
-  adaugaBloc(Tranzactie: Tranzactie, donatorPublicKey: string, semnatura: Buffer) {
+  adaugaBloc(
+    Tranzactie: Tranzactie,
+    donatorPublicKey: string,
+    semnatura: Buffer
+  ) {
     // creem o verificare cu același algorirtm SHA256
-    const verificare = crypto.createVerify('SHA256');
+    const verificare = crypto.createVerify("SHA256");
     // verificăm semnătura tranzacției prin trimiterea datelor tranzacției în validator
     verificare.update(Tranzactie.toString());
 
@@ -159,7 +162,6 @@ class Chain {
       this.chain.push(newBloc);
     }
   }
-
 }
 
 /*
@@ -177,62 +179,163 @@ Constructorul conține:
 class Portofel {
   public publicKey: string;
   public privateKey: string;
+  public soldPortofel: number;
+  public username?: string;
 
-  constructor(public soldPortofel: number) {
+  constructor(soldPortofel: number, username?: string) {
     // Algoritmul RSA este folosit și pentru criptare și decriptare
     // Pentru criptare se folosește cheia publică
     // Pentru decriptare este neapărat nevoie de cheia privată
-    const keypair = crypto.generateKeyPairSync('rsa', {
+    const keypair = crypto.generateKeyPairSync("rsa", {
       // 2048 de biți
       modulusLength: 2048,
       // folosirea de algoritmi pentru semnare digitală
       // folosim formatul pem pentru a putea, de exemplu, salva cheia într-un fișier
-      publicKeyEncoding: { type: 'spki', format: 'pem' },
-      privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+      publicKeyEncoding: { type: "spki", format: "pem" },
+      privateKeyEncoding: { type: "pkcs8", format: "pem" },
     });
 
     this.soldPortofel = soldPortofel;
     this.privateKey = keypair.privateKey;
     this.publicKey = keypair.publicKey;
+    this.username = username;
   }
 
   // metodă pentru efectuarea unei donații
   efectueazaDonatie(sumaDonata: number, primitorDonatiePublicKey: string) {
-    // începem efectuarea unei donații
-    const tranzactie = new Tranzactie(sumaDonata, this.publicKey, primitorDonatiePublicKey);
+    if (sumaDonata <= this.soldPortofel) {
+      // începem efectuarea unei donații
+      const tranzactie = new Tranzactie(
+        sumaDonata,
+        this.publicKey,
+        primitorDonatiePublicKey
+      );
 
-    // creem o semnătură hash
-    const sign = crypto.createSign('SHA256');
-    // pentru datele din tranzacție
-    sign.update(tranzactie.toString()).end();
+      // creem o semnătură hash
+      const sign = crypto.createSign("SHA256");
+      // pentru datele din tranzacție
+      sign.update(tranzactie.toString()).end();
 
-    // creem o altă semnătură cu cheia privată a celui care donează
-    const semnatura = sign.sign(this.privateKey); 
-    // această semnătură creează o parolă de tip OTP;
-    // mai târziu putem verifica identitatea cheii private (adică cel care a trimis donația)
-    // fără să expunem cheia privată;
-    // semnătura se poate verifica, mai târziu, folosind cheia publică
+      // creem o altă semnătură cu cheia privată a celui care donează
+      const semnatura = sign.sign(this.privateKey);
+      // această semnătură creează o parolă de tip OTP;
+      // mai târziu putem verifica identitatea cheii private (adică cel care a trimis donația)
+      // fără să expunem cheia privată;
+      // semnătura se poate verifica, mai târziu, folosind cheia publică
 
-    // scadem suma doanata din portofel
-    this.soldPortofel -= sumaDonata;
+      // scadem suma donata din portofel
+      this.soldPortofel -= sumaDonata;
 
-    // adăugăm acest bloc nou creat în lanțul de blocuri
-    Chain.instance.adaugaBloc(tranzactie, this.publicKey, semnatura);
+      // adaugam suma donata la cauza
+      for (let i = 0; i < cauzeDeDonare.length; i++) {
+        if (cauzeDeDonare[i].publicKey === primitorDonatiePublicKey) {
+          cauzeDeDonare[i].soldPortofel += sumaDonata;
+        }
+      }
+
+      // adăugăm acest bloc nou creat în lanțul de blocuri
+      Chain.instance.adaugaBloc(tranzactie, this.publicKey, semnatura);
+    } else {
+      console.log("Suma donata este mai mare decat soldul din portofel");
+      return;
+    }
   }
 
   // metodă care adaugă în portofelul utilizatorului o anumită sumă
-  depunere(sumaDepusa: number){
+  depunere(sumaDepusa: number) {
     this.soldPortofel += sumaDepusa;
   }
 
   // metodă care retrage din portofelul utilizatorului o anumită sumă
-  retragere(sumaRetrasa: number){
+  retragere(sumaRetrasa: number) {
     this.soldPortofel -= sumaRetrasa;
   }
 
-  // metodă care întoarce suma ramasă în portofel in urma unei donații
+  // metodă care întoarce suma rămasă în portofel în urma unei donații
   get soldActual() {
     return this.soldPortofel;
+  }
+}
+
+/*
+
+Clasa pentru simularea blockchain-ului
+
+*/
+
+class Simulate {
+  simulate() {
+    for (let i = 0; i < cauzeDeDonare.length; i++) {
+      console.log(
+        `\n${donatori[i].username} a acumulat suma donata de ${donatori[i].soldActual} RON`
+      );
+    }
+
+    for (let i = 0; i < donatori.length; i++) {
+      console.log(
+        `\n${donatori[i].username} are în portofel ${donatori[i].soldActual} RON`
+      );
+    }
+
+    let spitalNouBucuresti = cauzeDeDonare[0];
+    let AlexDinBucuresti = donatori[0];
+    let DanielDinCluj = donatori[1];
+    let MihaiDinBrasov = donatori[2];
+
+    // 3. Efectuăm 7 donații spre cauza de donare
+    AlexDinBucuresti.efectueazaDonatie(700, spitalNouBucuresti.publicKey);
+    console.log(
+      `\nÎn urma donațiilor, Alex mai are în portofel ${AlexDinBucuresti.soldActual} RON \n`
+    );
+    AlexDinBucuresti.depunere(2000);
+    console.log(
+      `\nÎn urma depunerii a 2000 RON, Alex mai are în portofel ${AlexDinBucuresti.soldActual} RON \n`
+    );
+
+    DanielDinCluj.efectueazaDonatie(200, spitalNouBucuresti.publicKey);
+    DanielDinCluj.efectueazaDonatie(300, spitalNouBucuresti.publicKey);
+    DanielDinCluj.efectueazaDonatie(600, spitalNouBucuresti.publicKey);
+    DanielDinCluj.efectueazaDonatie(1000, spitalNouBucuresti.publicKey);
+    console.log(
+      `\nÎn urma donațiilor, Daniel mai are în portofel ${DanielDinCluj.soldActual} RON \n`
+    );
+
+    MihaiDinBrasov.efectueazaDonatie(500, spitalNouBucuresti.publicKey);
+    MihaiDinBrasov.efectueazaDonatie(200, spitalNouBucuresti.publicKey);
+    console.log(
+      `\nÎn urma donațiilor, Mihai mai are în portofel ${MihaiDinBrasov.soldActual} RON \n`
+    );
+    MihaiDinBrasov.retragere(1000);
+    console.log(
+      `\nÎn urma retragerii a 1000 RON, Mihai mai are în portofel ${MihaiDinBrasov.soldActual} RON \n`
+    );
+
+    // 4. Afișăm blockchain-ul
+    console.log(Chain.instance);
+
+    // 5. Afișăm tranzacțiile în ordinea în care au fost efectuate
+    for (let i: number = 0; i < Chain.instance.chain.length; i++) {
+      console.log(Chain.instance.chain[i].Tranzactie);
+    }
+
+    // 6. Afișăm banii strânși pentru cauza de donare
+    let sumaStransa: number = 0;
+
+    for (let i: number = 0; i < Chain.instance.chain.length; i++) {
+      const tranzactieCurenta = Chain.instance.chain[i].Tranzactie;
+      if (tranzactieCurenta.primitorDonatie === spitalNouBucuresti.publicKey) {
+        sumaStransa += tranzactieCurenta.sumaDonata;
+      }
+    }
+
+    console.log(
+      `\n\nSuma strânsă pentru cauza de donare este, in urma tranzactiilor, : ${sumaStransa} RON`
+    );
+
+    // Verificăm suma strânsă în portofelul spitalului și prin funcția soldActual
+    console.log(
+      `\nSuma strânsă în portofelul spitalului, in sold actual, este: ${spitalNouBucuresti.soldActual} RON`
+    );
   }
 }
 
@@ -249,56 +352,17 @@ Exemplu de folosire:
 
 */
 
-// 1. Alegem o cauză de donare/crowdfunding
-const spitalNouBucuresti = new Portofel(0);
+// aici inregistram cauzele de donare
+let cauzeDeDonare: Portofel[] = [];
+cauzeDeDonare.push(new Portofel(0, "spitalNouBucuresti"));
 
-// 2. Generăm 3 donatori
-const AlexDinBucuresti = new Portofel(3000);
-console.log(`\nAlex are în portofel ${AlexDinBucuresti.soldActual} RON \n`);
+// aici inregistram donatorii
+let donatori: Portofel[] = [];
+donatori.push(
+  new Portofel(300, "AlexDinBucuresti"),
+  new Portofel(4500, "DanielDinCluj"),
+  new Portofel(3500, "MihaiDinBrasov")
+);
 
-const DanielDinCluj = new Portofel(4500);
-console.log(`Daniel are în portofel ${DanielDinCluj.soldActual} RON \n`);
-
-const MihaiDinBrasov = new Portofel(3500);
-console.log(`Mihai are în portofel ${MihaiDinBrasov.soldActual} RON \n`);
-
-// 3. Efectuăm 7 donații spre cauza de donare
-AlexDinBucuresti.efectueazaDonatie(700, spitalNouBucuresti.publicKey);
-console.log(`\nÎn urma donațiilor, Alex mai are în portofel ${AlexDinBucuresti.soldActual} RON \n`);
-AlexDinBucuresti.depunere(2000);
-console.log(`\nÎn urma depunerii a 2000 RON, Alex mai are în portofel ${AlexDinBucuresti.soldActual} RON \n`);
-
-DanielDinCluj.efectueazaDonatie(200, spitalNouBucuresti.publicKey);
-DanielDinCluj.efectueazaDonatie(300, spitalNouBucuresti.publicKey);
-DanielDinCluj.efectueazaDonatie(600, spitalNouBucuresti.publicKey);
-DanielDinCluj.efectueazaDonatie(1000, spitalNouBucuresti.publicKey);
-console.log(`\nÎn urma donațiilor, Daniel mai are în portofel ${DanielDinCluj.soldActual} RON \n`);
-
-MihaiDinBrasov.efectueazaDonatie(500, spitalNouBucuresti.publicKey);
-MihaiDinBrasov.efectueazaDonatie(200, spitalNouBucuresti.publicKey);
-console.log(`\nÎn urma donațiilor, Mihai mai are în portofel ${MihaiDinBrasov.soldActual} RON \n`);
-MihaiDinBrasov.retragere(1000);
-console.log(`\nÎn urma retragerii a 1000 RON, Mihai mai are în portofel ${MihaiDinBrasov.soldActual} RON \n`);
-
-// 4. Afișăm blockchain-ul
-console.log(Chain.instance)
-
-// 5. Afișăm tranzacțiile în ordinea în care au fost efectuate
-for (let i: number = 0; i < Chain.instance.chain.length; i++){
-  console.log(Chain.instance.chain[i].Tranzactie);
-}
-
-// 6. Afișăm banii strânși pentru cauza de donare
-let sumaStransa: number = 0
-
-for (let i: number = 0; i < Chain.instance.chain.length; i++){
-  const tranzactieCurenta = Chain.instance.chain[i].Tranzactie
-  if (tranzactieCurenta.primitorDonatie === spitalNouBucuresti.publicKey){
-    sumaStransa += tranzactieCurenta.sumaDonata;
-  }
-}
-
-console.log(`\n\nSuma strânsă pentru cauza de donare este: ${sumaStransa} RON`);
-// Verificăm suma strânsă în portofelul spitalului și prin funcția soldActual
-// TODO adauga bani si in sold
-// console.log(`\nSuma strânsă în portofelul spitalului (sold actual) este: ${spitalNouBucuresti.soldActual} RON`);
+const Sim = new Simulate();
+Sim.simulate();
